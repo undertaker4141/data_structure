@@ -6,84 +6,77 @@ matrix. Implement the below Matrix ADT that is extended from ADT 2.4 in page
 #include <bits/stdc++.h>
 using namespace std;
 
-class SparseMatrix;//參考課本程式
-class MatrixTerm
-{
-    friend SparseMatrix;
-    friend ostream &operator<<(ostream &os, const SparseMatrix &matrix);
-    friend istream &operator>>(istream &is, SparseMatrix &matrix);
+class Matrix{
+    private:
+    struct Element {
+        int row;
+        int col;
+        int value;
+    };
+    
+    int rows, cols;  // 矩陣的行數和列數
+    vector<Element> elements;  // 儲存非零元素的向量
+    int capacity;//最大元素數量
 
-private:
-    int row, col, value;
+    public:
+
+/*題目要的方法*/
+    Matrix(int row,int cols,int t);
+    // 建構子函式，建立一個有 r 列 c 行並且具有放 t 個非零項的容量
+    Matrix Transpose();
+    //回傳將 *this 中每個三元組的行與列交換後的 Matrix轉置
+    Matrix Add(Matrix b);
+    // 如果 *this 和 b 的維度一樣，那麼就把相對應的項給相加
+    // 亦即，具有相同列和行的值會被回傳；否則的話丟出例外。
+    Matrix Multiply(Matrix b);
+    // 如果*this 中的行數和 b 中的列數一樣多的話，那麼回傳的矩陣 d 就是 *this 和 b
+    //（依據 d[i][j]=Σ(a[i][k]．b[k][j]，其中 d[i][j]是第 (i, j) 個元素）相乘的結果。k 的範
+    // 圍 從 0 到*this 的行數減 1；如果不一樣多的話，那麼就丟出例外。
+    int Determinant( );
+    // 如果*this 是一個 square matrix，回傳𝑑𝑒𝑡(𝐴).
+    int Adjoint( );
+    // 如果*this 是一個 square matrix，回傳 adj(A).
+    Matrix Inverse ( );
+    // 如果*this 是一個 square matrix，回傳A反函數
+    Matrix Cofactor ( );
+    // 如果*this 是一個 square matrix，回傳𝐴𝑖𝑗.
+
+/*額外自己定義的方法*/
+    void addElement(int row, int col, int value);
 };
-
-// A set of triples, <row, column, value>, where row and column are non-negative
-//  integers and form a unique combination; value is also an integer.
-class SparseMatrix
-{
-    friend ostream &operator<<(ostream &os, const SparseMatrix &matrix);
-    friend istream &operator>>(istream &is, SparseMatrix &matrix);
-
-public:
-    // The constructor function creates a SparseMatrix with
-    //  r rows, c columns, and a capacity of t nonzero terms.
-    SparseMatrix(int r, int c, int t) : rows(r), cols(c), terms(0), capacity(t)
-    {
-        if (r < 0 || c < 0 || t < 0)
-            throw invalid_argument("Negative dimensions or capacity");
-        smArray = new MatrixTerm[capacity];
-    }
-    ~SparseMatrix()
-    {
-        delete[] smArray;
-    }
-
-private:
-    int rows, cols, terms, capacity;
-    MatrixTerm *smArray;
-};
-
-/*使用者輸入稀疏矩陣的非零項數量，並將每個非零項的行、列和值分別儲存到 MatrixTerm 陣列中。若輸入的非零項數量超出容量，則拋出錯誤。*/ 
-istream &operator>>(istream &is, SparseMatrix &matrix)//重載之方法 >>
-{
-    cout << "Enter the number of non-zero terms: ";
-    is >> matrix.terms;
-    if (matrix.terms > matrix.capacity)
-    {
-        throw overflow_error("Number of terms exceeds matrix capacity");
-    }
-
-    cout << "Enter each term as row, column value (separate by space):" << endl;
-    for (int i = 0; i < matrix.terms; i++)
-    {
-        is >> matrix.smArray[i].row >> matrix.smArray[i].col >> matrix.smArray[i].value;
-    }
-    return is;
+Matrix::Matrix(int rows,int cols,int t){
+    this->rows = rows;
+    this->cols = cols;
+    capacity = t;
+    elements.reserve(capacity);
 }
 
-/*以矩陣格式輸出稀疏矩陣。*/
-ostream &operator<<(ostream &os, const SparseMatrix &matrix)//重載之方法 <<
-{
-    int current_term = 0;
-    for (int i = 0; i < matrix.rows; i++)
-    {
-        for (int j = 0; j < matrix.cols; j++)
-        {
-            if (current_term < matrix.terms &&
-                matrix.smArray[current_term].row == i &&
-                matrix.smArray[current_term].col == j)
-            {
-                os << setw(4) << matrix.smArray[current_term++].value;
-            }
-            else
-            {
-                os << setw(4) << 0;
+void Matrix::addElement(int row, int col, int value){
+    if (row >= rows || col >= cols)
+            throw out_of_range("Invalid position");
+    if (elements.size() >= capacity)
+            throw overflow_error("capacity overflow");
+
+        for (auto &elem : elements) {
+            if (elem.row == row && elem.col == col) {
+                elem.value = value;
+                return;
             }
         }
-        os << endl;
-    }
-    return os;
+        elements.emplace_back(row, col, value);
+        sort(elements.begin(), elements.end());
 }
+
+Matrix Matrix::Transpose(){
+    Matrix result(cols, rows, capacity);
+        for (const auto &elem : elements) {
+            result.addElement(elem.col, elem.row, elem.value);
+        }
+        return result;
+}
+
+
+
 int main()
 {
     return 0;
